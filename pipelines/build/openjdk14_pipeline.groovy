@@ -16,14 +16,14 @@ def buildConfigurations = [
         x64Mac    : [
                 os                  : 'mac',
                 arch                : 'x64',
-                additionalNodeLabels : 'macos10.12',
+                additionalNodeLabels : 'macos10.14',
                 test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf']
         ],
 
-        x64MacXL    : [
+        x64MacXL: [
                 os                   : 'mac',
                 arch                 : 'x64',
-                additionalNodeLabels : 'macos10.12',
+                additionalNodeLabels : 'macos10.14',
                 test                 : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf'],
                 additionalFileNameTag: "macosXL",
                 configureArgs        : '--with-noncompressedrefs'
@@ -33,11 +33,17 @@ def buildConfigurations = [
                 os                  : 'linux',
                 arch                : 'x64',
                 additionalNodeLabels: 'centos6',
-                test                : [
-                        nightly: ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external'],
-                        release: ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external', 'special.functional']
-                ],
+                test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external', 'special.functional'],
                 configureArgs        : '--disable-ccache'
+        ],
+
+        x64LinuxXL    : [
+                os                   : 'linux',
+                additionalNodeLabels : 'centos6',
+                arch                 : 'x64',
+                test                 : ['sanity.openjdk', 'sanity.system', 'extended.system'],
+                additionalFileNameTag: "linuxXL",
+                configureArgs        : '--with-noncompressedrefs --disable-ccache'
         ],
 
         // Currently we have to be quite specific about which windows to use as not all of them have freetype installed
@@ -45,8 +51,7 @@ def buildConfigurations = [
                 os                  : 'windows',
                 arch                : 'x64',
                 additionalNodeLabels: [
-                        hotspot: 'win2012&&vs2017',
-                        openj9:  'win2012&&vs2017'
+                        hotspot: 'win2012&&vs2017'
                 ],
                 buildArgs : [
                         hotspot : '--jvm-variant client,server'
@@ -63,24 +68,13 @@ def buildConfigurations = [
                 configureArgs        : '--with-noncompressedrefs'
         ],
 
-        x32Windows: [
-                os                  : 'windows',
-                arch                : 'x86-32',
-                additionalNodeLabels: [
-                        hotspot: 'win2012&&vs2017',
-                        openj9:  'win2012&&mingw-standalone'
-                ],
-                buildArgs : [
-                        hotspot : '--jvm-variant client,server'
-                ],
-                test                : ['sanity.openjdk']
-        ],
 
         ppc64Aix    : [
                 os                  : 'aix',
                 arch                : 'ppc64',
+                additionalNodeLabels: 'xlc16',
                 test                : [
-                        nightly: false,
+                        nightly: ['sanity.openjdk'],
                         release: ['sanity.openjdk', 'sanity.system', 'extended.system']
                 ]
         ],
@@ -92,10 +86,12 @@ def buildConfigurations = [
                 configureArgs        : '--disable-ccache'
         ],
 
-        sparcv9Solaris    : [
-                os                  : 'solaris',
-                arch                : 'sparcv9',
-                test                : false
+        s390xLinuxXL    : [
+                os                   : 'linux',
+                arch                 : 's390x',
+                test                 : ['sanity.openjdk', 'sanity.system', 'extended.system'],
+                additionalFileNameTag: "linuxXL",
+                configureArgs        : '--with-noncompressedrefs --disable-ccache'
         ],
 
         ppc64leLinux    : [
@@ -106,12 +102,12 @@ def buildConfigurations = [
 
         ],
 
-        arm32Linux    : [
-                os                  : 'linux',
-                arch                : 'arm',
-                // TODO Temporarily remove the ARM tests because we don't have fast enough hardware
-                //test                : ['sanity.openjdk', 'sanity.perf']
-                test                : false
+        ppc64leLinuxXL    : [
+                os                   : 'linux',
+                arch                 : 'ppc64le',
+                test                 : ['sanity.openjdk', 'sanity.system', 'extended.system'],
+                additionalFileNameTag: "linuxXL",
+                configureArgs        : '--with-noncompressedrefs --disable-ccache'
         ],
 
         aarch64Linux    : [
@@ -121,25 +117,9 @@ def buildConfigurations = [
                 test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf']
         ],
 
-        /*
-        "x86-32Windows"    : [
-                os                 : 'windows',
-                arch               : 'x86-32',
-                additionalNodeLabels: 'win2012&&x86-32',
-                test                : false
-        ],
-        */
-        x64LinuxXL    : [
-                os                   : 'linux',
-                additionalNodeLabels : 'centos6',
-                arch                 : 'x64',
-                test                 : ['sanity.openjdk', 'sanity.system', 'extended.system'],
-                additionalFileNameTag: "linuxXL",
-                configureArgs        : '--with-noncompressedrefs --disable-ccache'
-        ],
 ]
 
-def javaToBuild = "jdk12u"
+def javaToBuild = "jdk14"
 
 node ("master") {
     def scmVars = checkout scm

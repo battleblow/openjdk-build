@@ -54,11 +54,19 @@ class Build {
     }
 
 
-    Integer getJavaVersionNumber() {
-        // version should be something like "jdk8u"
-        def matcher = (buildConfig.JAVA_TO_BUILD =~ /(\d+)/)
-        List<String> list = matcher[0] as List
-        return Integer.parseInt(list[1] as String)
+	Integer getJavaVersionNumber() {
+		def javaToBuild = buildConfig.JAVA_TO_BUILD
+        // version should be something like "jdk8u" or "jdk" for HEAD
+        Matcher matcher = javaToBuild =~ /.*?(?<version>\d+).*?/
+        if (matcher.matches()) {
+            return Integer.parseInt(matcher.group('version'))
+        } else if ("jdk".equalsIgnoreCase(javaToBuild.trim())) {
+            // This needs to get updated when JDK HEAD version updates
+            return Integer.valueOf("15")
+        } else {
+            context.error("Failed to read java version '${javaToBuild}'")
+            throw new Exception()
+        }
     }
 
     def determineTestJobName(testType) {
@@ -91,8 +99,13 @@ class Build {
 
     def runTests() {
         def testStages = [:]
-
-        List testList = buildConfig.TEST_LIST
+        List testList = []
+        
+        if (buildConfig.VARIANT == "hotspot-jfr") {
+        	testList = buildConfig.TEST_LIST.minus(['sanity.external'])
+        } else {
+        	testList = buildConfig.TEST_LIST
+        }
         testList.each { testType ->
             // For each requested test, i.e 'sanity.openjdk', 'sanity.system', 'sanity.perf', 'sanity.external', call test job
             try {
@@ -140,7 +153,8 @@ class Build {
 
     def sign(VersionInfo versionInfo) {
         // Sign and archive jobs if needed
-        if (buildConfig.TARGET_OS == "windows" || buildConfig.TARGET_OS == "mac") {
+        // TODO: This version info check needs to be updated when the notarization fix gets applied to other versions.
+        if (buildConfig.TARGET_OS == "windows" || (buildConfig.TARGET_OS == "mac" && versionInfo.major == 8) || (buildConfig.TARGET_OS == "mac" && versionInfo.major == 13)) {
             context.node('master') {
                 context.stage("sign") {
                     def filter = ""
@@ -409,7 +423,7 @@ class Build {
 
             fileName = "${fileName}_${nameTag}"
         } else {
-            def timestamp = new Date().format("YYYY-MM-dd-HH-mm", TimeZone.getTimeZone("UTC"))
+            def timestamp = new Date().format("yyyy-MM-dd-HH-mm", TimeZone.getTimeZone("UTC"))
 
             fileName = "${fileName}_${timestamp}"
         }

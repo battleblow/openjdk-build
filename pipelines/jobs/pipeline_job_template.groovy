@@ -1,6 +1,9 @@
 import groovy.json.JsonOutput
 
-triggerSchedule = "@daily"
+if(!binding.hasVariable('triggerSchedule')) {
+    triggerSchedule = "@daily"
+}
+
 gitRefSpec = ""
 propagateFailures = false
 runTests = true
@@ -37,7 +40,6 @@ pipelineJob("${BUILD_FOLDER}/${JOB_NAME}") {
         }
     }
     disabled(disableJob)
-    concurrentBuild(false)
     triggers {
         cron(triggerSchedule)
     }
@@ -47,6 +49,7 @@ pipelineJob("${BUILD_FOLDER}/${JOB_NAME}") {
     }
 
     properties {
+	disableConcurrentBuilds()
         copyArtifactPermissionProperty {
             projectNames('*')
         }

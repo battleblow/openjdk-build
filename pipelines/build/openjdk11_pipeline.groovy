@@ -16,17 +16,14 @@ def buildConfigurations = [
         x64Mac    : [
                 os                  : 'mac',
                 arch                : 'x64',
-                additionalNodeLabels: [
-                        hotspot: 'build-macstadium-macos1010-1',
-                        openj9:  'build-macstadium-macos1010-2'
-                ],
+                additionalNodeLabels : 'macos10.14',
                 test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf']
         ],
 
         x64MacXL    : [
                 os                   : 'mac',
                 arch                 : 'x64',
-                additionalNodeLabels : 'build-macstadium-macos1010-2',
+                additionalNodeLabels : 'macos10.14',
                 test                 : ['sanity.openjdk', 'sanity.system', 'extended.system'],
                 additionalFileNameTag: "macosXL",
                 configureArgs        : '--with-noncompressedrefs'
@@ -40,7 +37,13 @@ def buildConfigurations = [
                         nightly: ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external'],
                         release: ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external', 'special.functional']
                 ],
-                configureArgs        : '--disable-ccache'
+                configureArgs       : [
+                        "openj9"      : '--disable-ccache --enable-jitserver',
+                        "hotspot"     : '--disable-ccache',
+                        "hotspot-jfr" : '--disable-ccache',
+                        "corretto"    : '--disable-ccache',
+                        "SapMachine"  : '--disable-ccache'
+                ]
         ],
 
         // Currently we have to be quite specific about which windows to use as not all of them have freetype installed
@@ -82,8 +85,9 @@ def buildConfigurations = [
         ppc64Aix    : [
                 os                  : 'aix',
                 arch                : 'ppc64',
+                additionalNodeLabels: 'xlc13',
                 test                : [
-                        nightly: false,
+                        nightly: ['sanity.openjdk'],
                         release: ['sanity.openjdk', 'sanity.system', 'extended.system']
                 ]
         ],
@@ -132,10 +136,32 @@ def buildConfigurations = [
                 test                : false
         ],
         */
-        linuxXL    : [
+        x64LinuxXL    : [
                 os                   : 'linux',
                 additionalNodeLabels : 'centos6',
                 arch                 : 'x64',
+                test                 : ['sanity.openjdk', 'sanity.system', 'extended.system'],
+                additionalFileNameTag: "linuxXL",
+                configureArgs        : '--with-noncompressedrefs --disable-ccache --enable-jitserver'
+        ],
+        s390xLinuxXL    : [
+                os                   : 'linux',
+                arch                 : 's390x',
+                test                 : ['sanity.openjdk', 'sanity.system', 'extended.system'],
+                additionalFileNameTag: "linuxXL",
+                configureArgs        : '--with-noncompressedrefs --disable-ccache'
+        ],
+        ppc64leLinuxXL    : [
+                os                   : 'linux',
+                arch                 : 'ppc64le',
+                test                 : ['sanity.openjdk', 'sanity.system', 'extended.system'],
+                additionalFileNameTag: "linuxXL",
+                configureArgs        : '--with-noncompressedrefs --disable-ccache'
+        ],
+        aarch64LinuxXL    : [
+                os                   : 'linux',
+                additionalNodeLabels : 'centos7',
+                arch                 : 'aarch64',
                 test                 : ['sanity.openjdk', 'sanity.system', 'extended.system'],
                 additionalFileNameTag: "linuxXL",
                 configureArgs        : '--with-noncompressedrefs --disable-ccache'

@@ -67,8 +67,12 @@ checkJDKVersion()
 			jdkVersion="jdk12u";;
 		"jdk13u" | "jdk13" | "13" | "13u" )
 			jdkVersion="jdk13u";;
+                "jdk14u" | "jdk14" | "14" | "14u" )
+                        jdkVersion="jdk14";;
+                "jdk15u" | "jdk15" | "15" | "15u" )
+                        jdkVersion="jdk";;
 		"all" )
-			jdkVersion="jdk8u jdk9u jdk10u jdk11u jdk12u jdk13u";;
+			jdkVersion="jdk8u jdk9u jdk10u jdk11u jdk12u jdk13u jdk14u jdk15u";;
 		*)
 			echo "Not a valid JDK Version" ; jdkVersionList; exit 1;;
 	esac
@@ -83,7 +87,9 @@ jdkVersionList()
 		- jdk10u
 		- jdk11u
 		- jdk12u
-		- jdk13u"
+		- jdk13u
+		- jdk14u
+		- jdk15u"
 }
 
 checkArgs()
@@ -107,7 +113,7 @@ useEclipseDockerFiles()
 	do
 		# ${jdk%?} will remove the 'u' from 'jdk__u' when needed.
 		curl -o Dockerfile.$jdk https://raw.githubusercontent.com/eclipse/openj9/master/buildenv/docker/${jdk%?}/x86_64/ubuntu16/Dockerfile;
-		sharedDockerCommands $jdk
+		sharedEclipseDockerCommands $jdk
 	done
 }
 
@@ -125,17 +131,19 @@ useEclipseDockerSlavesFiles()
 	for jdk in $jdkVersion
 	do
 		cp Dockerfile $PWD/Dockerfile.$jdk
-		sharedDockerCommands $jdk
+		sharedEclipseDockerCommands $jdk
 	done
 }
 
-sharedDockerCommands()
+sharedEclipseDockerCommands()
 {
 	local jdk=$1
 	docker build -t $jdk -f Dockerfile.$jdk .
-	docker run -it -u root -d --name=$jdk $jdk
-	docker exec -u root -it $jdk sh -c "git clone https://github.com/ibmruntimes/openj9-openjdk-${jdk%?}"
-	docker exec -u root -it $jdk sh -c "cd openj9-openjdk-${jdk%?} && bash ./get_source.sh && bash ./configure --with-freemarker-jar=/root/freemarker.jar && make all"
+	docker run -it -u root -d --name=${jdk}-Eclipse $jdk
+	docker exec -u root -i ${jdk}-Eclipse sh -c "git clone https://github.com/ibmruntimes/openj9-openjdk-${jdk%?}"
+	docker exec -u root -i ${jdk}-Eclipse sh -c "cd openj9-openjdk-${jdk%?} && bash ./get_source.sh && bash ./configure --with-freemarker-jar=/root/freemarker.jar && make all"
+	docker stop ${jdk}-Eclipse
+	docker rm ${jdk}-Eclipse
 }
 
 buildDocker()
@@ -156,11 +164,11 @@ buildDocker()
 
 setupGit()
 {
-	if [ ! -d "$jdkVersion-$buildVariant/docker" ]; then
+	if [ ! -d "$WORKSPACE/DockerBuildFolder/$jdkVersion-$buildVariant/docker" ]; then
 		git clone https://github.com/adoptopenjdk/openjdk-build $WORKSPACE/DockerBuildFolder/$jdkVersion-$buildVariant
 	else
-		cd $jdkVersion-$buildVariant
-		git pull https://github.com/adoptopenjdk/openjdk-build
+		cd $WORKSPACE/DockerBuildFolder/$jdkVersion-$buildVariant
+		git pull
 	fi
 }
 parseCommandLineArgs $@
